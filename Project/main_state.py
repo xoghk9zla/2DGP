@@ -8,14 +8,11 @@ import game_framework
 import title_state
 
 
-
 name = "MainState"
 
-student = None
-room = None
-font = None
 
 frame_time = 0.0
+x, y = 0, 0
 
 
 class Room:
@@ -30,6 +27,7 @@ class Student:
     def __init__(self):
         self.hp_x, self.hp_y = 200, 525
         self.hp = 100
+        self.damage = 10
         self.stress = 0
         self.image = load_image('hp_e.png')
 
@@ -37,7 +35,7 @@ class Student:
         delay(0.5)
         self.stress += 1
         if self.stress == 100:
-            self.stress = 0
+            pass
 
     def draw(self):
         self.image.clip_draw(0, 0, 2200 , 100, self.hp_x, self.hp_y, 2.2 * self.stress, 25)
@@ -48,6 +46,7 @@ class Enemy:
         self.x, self.y = 600, 400
         self.hp_x, self.hp_y = 600, 525
         self.hp = 100
+        self.hit = False
         self.frame = 0
         self.image = load_image('Enemy_C.png')
         self.image_hp = load_image('hp_e.png')
@@ -60,6 +59,8 @@ class Enemy:
         delay(0.01)
         frame_time += 0.01
 
+    def update_hp(self):
+        self.hp -= student.damage
 
     def draw(self):
         self.image.clip_draw(self.frame * 440, 0, 440, 275, self.x, self.y, 200, 150)
@@ -88,18 +89,26 @@ def resume():
 
 
 def handle_events():
+    global x, y, hit
     events = get_events()
     for event in events:
         if event.type == SDL_QUIT:
             game_framework.quit()
         elif event.type == SDL_KEYDOWN and event.type == SDLK_ESCAPE:
             game_framework.change_state(title_state)
+        elif event.type == SDL_MOUSEMOTION:
+            x, y = event.x, 600 - event.y
+        elif event.type == SDL_MOUSEBUTTONDOWN and (enemy.x - 100 < x and x < enemy.x + 100) and (enemy.y - 75 < y and y < enemy.y + 75):
+            enemy.hit = True
 
 
 def update():
+    global hit
     student.update()
     enemy.update()
-
+    if enemy.hit == True:
+        enemy.update_hp()
+        enemy.hit = False
 
 def draw():
     clear_canvas()
