@@ -6,7 +6,7 @@ from pico2d import *
 
 import game_framework
 import title_state
-
+import gameover_state
 
 name = "MainState"
 
@@ -26,26 +26,26 @@ class Room:
 class Student:
     def __init__(self):
         self.hp_x, self.hp_y = 200, 525
-        self.hp = 100
+        self.hp = 0
         self.damage = 10
-        self.stress = 0
+        self.gold = 0
         self.image = load_image('hp_e.png')
 
     def update(self):
         delay(0.5)
-        self.stress += 1
-        if self.stress == 100:
-            pass
+        self.hp += subject.damage
 
     def draw(self):
-        self.image.clip_draw(0, 0, 2200 , 100, self.hp_x, self.hp_y, 2.2 * self.stress, 25)
+        self.image.clip_draw(0, 0, 2200, 100, self.hp_x, self.hp_y, 2.2 * self.hp, 25)
 
 
-class Enemy:
+class Subject:
     def __init__(self):
         self.x, self.y = 600, 400
         self.hp_x, self.hp_y = 600, 525
         self.hp = 100
+        self.max_hp = 100
+        self.damage = 1
         self.hit = False
         self.frame = 0
         self.image = load_image('Enemy_C.png')
@@ -56,27 +56,30 @@ class Enemy:
         if frame_time > 1.0:
             frame_time = 0.0
             self.frame = (self.frame + 1) % 5
-        delay(0.01)
-        frame_time += 0.01
+        delay(0.5)
+        frame_time += 0.5
 
     def update_hp(self):
-        self.hp -= student.damage
+        if self.hp > student.damage:
+            self.hp -= student.damage
+        else:
+            self.hp = self.max_hp
 
     def draw(self):
         self.image.clip_draw(self.frame * 440, 0, 440, 275, self.x, self.y, 200, 150)
         self.image_hp.clip_draw(0, 0, 2200, 100, self.hp_x, self.hp_y, 2.2 * self.hp, 25)
 
 def enter():
-    global student, enemy, room
+    global student, subject, room
     student = Student()
-    enemy = Enemy()
+    subject = Subject()
     room = Room()
 
 
 def exit():
-    global student, enemy, room
+    global student, subject, room
     del(student)
-    del(enemy)
+    del(subject)
     del(room)
 
 
@@ -98,21 +101,25 @@ def handle_events():
             game_framework.change_state(title_state)
         elif event.type == SDL_MOUSEMOTION:
             x, y = event.x, 600 - event.y
-        elif event.type == SDL_MOUSEBUTTONDOWN and (enemy.x - 100 < x and x < enemy.x + 100) and (enemy.y - 75 < y and y < enemy.y + 75):
-            enemy.hit = True
+        elif event.type == SDL_MOUSEBUTTONDOWN and (subject.x - 100 < x and x < subject.x + 100) and (subject.y - 75 < y and y < subject.y + 75):
+            subject.hit = True
+            student.gold += 10
 
 
 def update():
     global hit
-    student.update()
-    enemy.update()
-    if enemy.hit == True:
-        enemy.update_hp()
-        enemy.hit = False
+    subject.update()
+    if subject.hit == True:
+        subject.update_hp()
+        subject.hit = False
+    if student.hp < 100:
+        student.update()
+    else:
+        game_framework.change_state(gameover_state)
 
 def draw():
     clear_canvas()
     room.draw()
     student.draw()
-    enemy.draw()
+    subject.draw()
     update_canvas()
