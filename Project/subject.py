@@ -2,6 +2,9 @@ import random
 
 from pico2d import *
 
+import game_framework
+import endding_state
+
 
 class Subject:
     font = None
@@ -44,23 +47,21 @@ class Subject:
             self.hp -= student.damage
         else:
             self.hp = self.hp_max
-
-        if self.progress < 100:
-            self.progress += 5 - self.level
-        else:
-            self.finish()
+            if self.progress + 10 - self.level < 100:
+                self.progress += 10 - self.level
+            else:
+                self.finish()
 
     def finish(self):
         if self.level < 4:
             self.level += 1
+            self.progress = 0
+            self.hp_max += 10
+            self.hp = self.hp_max
+            self.damage += 5
             self.name = self.subject_list[self.level]
         else:
-            #endding_state change
-            pass
-        self.progress = 0
-        self.hp_max += 10
-        self.hp = self.hp_max
-        self.damage += 5
+            game_framework.change_state(endding_state)
 
     def draw(self, frame_time):
         self.image.clip_draw(self.frame * 440, 0, 440, 275, self.x, self.y, self.x_range * 2, self.y_range * 2)

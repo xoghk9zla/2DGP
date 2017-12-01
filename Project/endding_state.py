@@ -5,15 +5,14 @@ import main_state
 from pico2d import *
 
 
-name = "GameoverState"
+name = "EnddingState"
 image = None
 logo_time = 0.0
 
 
 def enter():
     global image
-    image = load_image('gameover.png')
-
+    image = load_image('endding.png')
 
 def exit():
     global image
@@ -40,11 +39,9 @@ def handle_events(frame_time):
     pass
 
 
-def pause(): pass
+def pause():
+    pass
 
 
-def resume(): pass
-
-
-
-
+def resume():
+    pass

@@ -55,7 +55,7 @@ def collide(object, x, y):
 
 
 def handle_events(frame_time):
-    global x, y, randombox
+    global x, y, student, subject, randombox
 
     events = get_events()
 
@@ -68,14 +68,25 @@ def handle_events(frame_time):
             x, y = event.x, 600 - event.y
         elif event.type == SDL_MOUSEBUTTONDOWN:
             if collide(subject, x, y):
-                subject.update_hp(student)
-                student.attack()
+                student.attack(subject)
                 if random.randint(0, 9) == 3 and len(randombox) == 0:
                     randombox.append(Randombox())
-            for box in randombox:
-                if collide(box, x, y):
-                    box.open_box(student)
-                    randombox.remove(box)
+                    for box in randombox:
+                        box.take_box_sound.play()
+                subject.update_hp(student)
+
+            else:
+                for box in randombox:
+                    if collide(box, x, y):
+                        box.open_box(student)
+                        randombox.remove(box)
+
+        elif event.type == SDL_KEYDOWN and event.key == SDLK_z:
+            if subject.progress >= 5:
+                student.skill_self_cancel_a_class(subject)
+        elif event.type == SDL_KEYDOWN and event.key == SDLK_x:
+            if student.gold >= 300:
+                student.skill_drink()
 
 
 def update(frame_time):
