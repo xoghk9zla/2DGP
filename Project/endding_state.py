@@ -12,7 +12,7 @@ logo_time = 0.0
 
 def enter():
     global image
-    image = load_image('endding.png')
+    image = load_image('images/states/endding.png')
 
 def exit():
     global image

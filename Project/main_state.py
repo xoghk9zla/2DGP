@@ -6,6 +6,7 @@ from pico2d import *
 
 import game_framework
 import title_state
+import shop_state
 import gameover_state
 
 from room import Room
@@ -21,20 +22,37 @@ student = None
 subject = None
 room = None
 randombox = None
+font = None
+warning_bgm = None
+buy_bgm = None
+new_game = True
 
 def enter():
-    global student, subject, room, randombox
-    student = Student()
-    subject = Subject()
-    room = Room()
-    randombox = []
+    global student, subject, room, randombox, warning_bgm, buy_bgm, new_game, font
+
+    if new_game:
+        student = Student()
+        subject = Subject()
+        room = Room()
+        randombox = []
+        warning_bgm = load_music('sounds/effects/warning.mp3')
+        warning_bgm.set_volume(64)
+        buy_bgm = load_music('sounds/effects/buy.mp3')
+        buy_bgm.set_volume(64)
+        if font == None:
+            font = load_font('ENCR10B.TTF', 16)
+
 
 def exit():
-    global student, subject, room, randombox
-    del(student)
-    del(subject)
-    del(room)
-    del(randombox)
+    global student, subject, room, randombox, warning_bgm, font
+
+    if new_game:
+        del(student)
+        del(subject)
+        del(room)
+        del(randombox)
+        del(warning_bgm)
+        del(font)
 
 
 def pause():
@@ -55,7 +73,7 @@ def collide(object, x, y):
 
 
 def handle_events(frame_time):
-    global x, y, student, subject, randombox
+    global x, y, student, subject, randombox, new_game
 
     events = get_events()
 
@@ -69,24 +87,32 @@ def handle_events(frame_time):
         elif event.type == SDL_MOUSEBUTTONDOWN:
             if collide(subject, x, y):
                 student.attack(subject)
-                if random.randint(0, 9) == 3 and len(randombox) == 0:
+                if random.randint(0, 99) % 10 == 1  and len(randombox) == 0:
                     randombox.append(Randombox())
                     for box in randombox:
                         box.take_box_sound.play()
                 subject.update_hp(student)
-
             else:
                 for box in randombox:
                     if collide(box, x, y):
                         box.open_box(student)
                         randombox.remove(box)
-
+        elif event.type == SDL_KEYDOWN and event.key == SDLK_b:
+            new_game = False
+            room.bgm.pause()
+            game_framework.push_state(shop_state)
         elif event.type == SDL_KEYDOWN and event.key == SDLK_z:
             if subject.progress >= 5:
+                buy_bgm.play()
                 student.skill_self_cancel_a_class(subject)
+            else:
+                warning_bgm.play()
         elif event.type == SDL_KEYDOWN and event.key == SDLK_x:
-            if student.gold >= 300:
+            if student.gold >= 300 * student.level / 3:
+                buy_bgm.play()
                 student.skill_drink()
+            else:
+                warning_bgm.play()
 
 
 def update(frame_time):
